@@ -15,20 +15,34 @@ class BraTSDataset(Dataset):
 
     def __getitem__(self, idx):
         paths = self.file_paths[idx]
-        # Sort to maintain consistent ordering of modalities
-        paths = sorted(paths)
+
+        # Find the segmentation label path (contains 'seg')
+        seg_path = [p for p in paths if "seg" in p.lower()]
+        if not seg_path:
+            raise ValueError(f"No segmentation file found in: {paths}")
+        seg_path = seg_path[0]  # Assuming only one label file per sample
+
+        # Use all other files as modalities
+        modal_paths = [p for p in paths if p != seg_path]
+        # Optional: sort for consistent order
+        modal_paths = sorted(modal_paths)
+
+        # Load modalities
         modalities = []
-        for path in paths[:-1]:
+        for path in modal_paths:
             img = nib.load(path).get_fdata()
             img = self._resize(img)
             modalities.append(img)
-        image = np.stack(modalities, axis=0)
-        mask = nib.load(paths[-1]).get_fdata()
+        image = np.stack(modalities, axis=0)  # [C, D, H, W]
+
+        # Load segmentation mask
+        mask = nib.load(seg_path).get_fdata()
         mask = self._resize(mask)
-        mask = (mask > 0).astype(np.uint8)  # Binary mask
-        return torch.tensor(image, dtype=torch.float32), torch.tensor(
-            mask, dtype=torch.long
-        )
+        mask = mask.astype(np.uint8)
+        # mask = (mask > 0).astype(np.uint8)
+
+        return torch.tensor(image, dtype=torch.float32), torch.tensor(mask, dtype=torch.long)
+
 
     def _resize(self, volume):
         # Crop or pad to desired shape
