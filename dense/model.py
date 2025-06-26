@@ -42,6 +42,20 @@ class UNet(nn.Module):
         start_w = (w - tw) // 2
         return enc_feat[:, :, start_d:start_d+td, start_h:start_h+th, start_w:start_w+tw]
 
+    # def forward(self, x):
+    #     e1 = self.enc1(x)
+    #     e2 = self.enc2(self.pool(e1))
+    #     e3 = self.enc3(self.pool(e2))
+    #     e4 = self.enc4(self.pool(e3))
+    #     b = self.bottleneck(self.pool(e4))
+
+    #     d4 = self.dec4(torch.cat([self.up4(b), e4], dim=1))
+    #     d3 = self.dec3(torch.cat([self.up3(d4), e3], dim=1))
+    #     d2 = self.dec2(torch.cat([self.up2(d3), e2], dim=1))
+    #     d1 = self.dec1(torch.cat([self.up1(d2), e1], dim=1))
+
+    #     return self.final(d1)
+
     def forward(self, x):
         e1 = self.enc1(x)
         e2 = self.enc2(self.pool(e1))
@@ -49,34 +63,20 @@ class UNet(nn.Module):
         e4 = self.enc4(self.pool(e3))
         b = self.bottleneck(self.pool(e4))
 
-        d4 = self.dec4(torch.cat([self.up4(b), e4], dim=1))
-        d3 = self.dec3(torch.cat([self.up3(d4), e3], dim=1))
-        d2 = self.dec2(torch.cat([self.up2(d3), e2], dim=1))
-        d1 = self.dec1(torch.cat([self.up1(d2), e1], dim=1))
+        u4 = self.up4(b)
+        e4 = self.center_crop(e4, u4.shape[2:])
+        d4 = self.dec4(torch.cat([u4, e4], dim=1))
+
+        u3 = self.up3(d4)
+        e3 = self.center_crop(e3, u3.shape[2:])
+        d3 = self.dec3(torch.cat([u3, e3], dim=1))
+
+        u2 = self.up2(d3)
+        e2 = self.center_crop(e2, u2.shape[2:])
+        d2 = self.dec2(torch.cat([u2, e2], dim=1))
+
+        u1 = self.up1(d2)
+        e1 = self.center_crop(e1, u1.shape[2:])
+        d1 = self.dec1(torch.cat([u1, e1], dim=1))
 
         return self.final(d1)
-
-# def forward(self, x):
-#         e1 = self.enc1(x)
-#         e2 = self.enc2(self.pool(e1))
-#         e3 = self.enc3(self.pool(e2))
-#         e4 = self.enc4(self.pool(e3))
-#         b = self.bottleneck(self.pool(e4))
-
-#         u4 = self.up4(b)
-#         e4 = self.center_crop(e4, u4.shape[2:])
-#         d4 = self.dec4(torch.cat([u4, e4], dim=1))
-
-#         u3 = self.up3(d4)
-#         e3 = self.center_crop(e3, u3.shape[2:])
-#         d3 = self.dec3(torch.cat([u3, e3], dim=1))
-
-#         u2 = self.up2(d3)
-#         e2 = self.center_crop(e2, u2.shape[2:])
-#         d2 = self.dec2(torch.cat([u2, e2], dim=1))
-
-#         u1 = self.up1(d2)
-#         e1 = self.center_crop(e1, u1.shape[2:])
-#         d1 = self.dec1(torch.cat([u1, e1], dim=1))
-
-#         return self.final(d1)

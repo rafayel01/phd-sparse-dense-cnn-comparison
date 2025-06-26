@@ -51,8 +51,8 @@ train_paths, val_paths = train_test_split(all_paths, test_size=0.2, random_state
 
 train_ds = BraTSDataset(train_paths)
 val_ds = BraTSDataset(val_paths)
-train_dl = DataLoader(train_ds, batch_size=2, shuffle=True)
-test_dl = DataLoader(val_ds, batch_size=2)
+train_dl = DataLoader(train_ds, batch_size=4, shuffle=True)
+test_dl = DataLoader(val_ds, batch_size=4)
 
 
 model = UNet(in_channels=4, out_channels=4)

@@ -67,12 +67,16 @@ def train(
         for inputs, targets in tqdm(train_loader, desc="Training"):
             inputs = inputs.to(device, dtype=torch.float32)  # [B, 4, D, H, W]
             targets = targets.to(device, dtype=torch.long)  # [B, D, H, W]
+            # print(f"{targets.max() = }")
+            # exit()
 
+            targets[targets == 4] = 3
             optimizer.zero_grad()
             outputs = model(inputs)  # [B, C, D, H, W]
 
             loss = criterion(outputs, targets)
             # print("Loss value:", loss)
+
             loss.backward()
             optimizer.step()
 
@@ -98,7 +102,7 @@ def train(
             for inputs, targets in tqdm(val_loader, desc="Validating"):
                 inputs = inputs.to(device, dtype=torch.float32)
                 targets = targets.to(device, dtype=torch.long)
-
+                targets[targets == 4] = 3
                 outputs = model(inputs)
                 loss = criterion(outputs, targets)
                 val_loss += loss.item()
