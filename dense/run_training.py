@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import CrossEntropyLoss
 from sklearn.model_selection import train_test_split
 
 from dataset import BraTSDataset
@@ -55,9 +56,9 @@ train_dl = DataLoader(train_ds, batch_size=4, shuffle=True)
 test_dl = DataLoader(val_ds, batch_size=4)
 
 
-model = UNet(in_channels=4, out_channels=4)
+model = UNet(in_channels=4, num_classes=4)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-criterion = DiceLoss()
+criterion = DiceLoss() #CrossEntropyLoss() #DiceLoss()
 
 # Training
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

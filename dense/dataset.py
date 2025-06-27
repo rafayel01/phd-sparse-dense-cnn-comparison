@@ -2,6 +2,7 @@ import nibabel as nib
 import torch
 from torch.utils.data import Dataset
 import numpy as np
+from scipy.ndimage import zoom
 
 IMG_SIZE = (128, 128, 128)
 
@@ -43,11 +44,20 @@ class BraTSDataset(Dataset):
 
         return torch.tensor(image, dtype=torch.float32), torch.tensor(mask, dtype=torch.long)
 
+    def _resize(self, volume, is_label=False):
+        """
+        Resize a 3D volume to IMG_SIZE using interpolation.
+        Use nearest neighbor for labels, linear for modalities.
+        """
+        zoom_factors = [n / o for n, o in zip(IMG_SIZE, volume.shape)]
+        order = 0 if is_label else 1
+        resized = zoom(volume, zoom=zoom_factors, order=order)
+        return resized
 
-    def _resize(self, volume):
-        # Crop or pad to desired shape
-        output = np.zeros(IMG_SIZE)
-        shape = np.minimum(volume.shape, IMG_SIZE)
-        slices = tuple(slice(0, s) for s in shape)
-        output[slices] = volume[slices]
-        return output
+    # def _resize(self, volume):
+    #     # Crop or pad to desired shape
+    #     output = np.zeros(IMG_SIZE)
+    #     shape = np.minimum(volume.shape, IMG_SIZE)
+    #     slices = tuple(slice(0, s) for s in shape)
+    #     output[slices] = volume[slices]
+    #     return output
